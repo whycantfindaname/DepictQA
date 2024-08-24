@@ -1,22 +1,20 @@
 import argparse
 import base64
-import glob
 import json
 import os
 
 import weave
 from openai import OpenAI
+from utils import load_json
 
 OPENAI_API_KEY = "sk-tE7K8vJ9Dla5zDMx87F9EeB7372340C68067179938991e54"
 OPENAI_API_BASE = "https://api.gpt.ge/v1"
 client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
-parser = argparse.ArgumentParser(
-    description="To Prompt GPT-4 for Image Quality Assessment"
-)
-parser.add_argument("--meta_dir", type=str, required=True)
+parser = argparse.ArgumentParser(description="To Prompt GPT-4 for Image Descriptions")
+parser.add_argument("--meta_file", type=str, required=True)
 parser.add_argument("--image_folder", type=str, required=True)
-parser.add_argument("--desp_dir", type=str, required=True)
+parser.add_argument("--desp_file", type=str, required=True)
 parser.add_argument("--desp_fail_dir", type=str, required=True)
 
 
@@ -72,32 +70,27 @@ if __name__ == "__main__":
     idx_meta_start = 0
     idx_meta_end = -1
 
-    meta_dir = args.meta_dir
-    meta_paths = sorted(glob.glob(os.path.join(meta_dir, "*.json")))
-    desp_dir = args.desp_dir
+    meta_file = args.meta_file
+    desp_file = args.desp_file
     fail_dir = args.desp_fail_dir
     image_folder = args.image_folder
-    os.makedirs(desp_dir, exist_ok=True)
-    os.makedirs(fail_dir, exist_ok=True)
     # description_query
     dist_paths_error = []
-    for idx_meta, meta_path in enumerate(meta_paths[idx_meta_start:idx_meta_end]):
-        # print("=" * 100)
-        # print(idx_meta + idx_meta_start)
+    meta_data = load_json(meta_file)
+    if os.path.exists(desp_file):
+        desp_data = load_json(desp_file)
+    else:
+        desp_data = []
 
-        meta_name = os.path.basename(meta_path)
-        desp_path = os.path.join(desp_dir, meta_name)
-        save_path = os.path.join(desp_dir, meta_name)
-        if os.path.exists(save_path):
-            # print(f"{save_path} has been generated, skip.")
+    for idx_meta, meta_item in enumerate(meta_data[idx_meta_start:idx_meta_end]):
+        print("=" * 100)
+        print(idx_meta + idx_meta_start)
+
+        img_name = meta_item["filename"]
+        if img_name in [item["filename"] for item in desp_data]:
+            print(f"{img_name} has been generated, skip.")
             continue
-
-        with open(meta_path) as fr:
-            meta = json.load(fr)
-        img_name = meta["filename"]
         img_path = os.path.join(image_folder, img_name)
-        dist_class = meta["distortion"]
-        score = meta["mos"]
 
         # description_query
         description_query = (
@@ -109,9 +102,9 @@ if __name__ == "__main__":
 
         try:
             content = gpt4v(img_path, description_query)
-            meta["gpt4v_description"] = content
-            with open(save_path, "w") as fw:
-                fw.write(json.dumps(meta, indent=4))
+            meta_item["gpt4v_description"] = content
+            desp_data.append(meta_item)
+            print(content)
         except:
             import sys
 
@@ -126,6 +119,10 @@ if __name__ == "__main__":
             print(exc_dict)
             dist_paths_error.append(img_name)
 
+    with open(desp_file, "w") as fw:
+        json.dump(desp_data, fw, indent=4, ensure_ascii=False)
+
+    os.makedirs(fail_dir, exist_ok=True)
     fail_path = os.path.join(fail_dir, "res_fail.txt")
     with open(fail_path, "w") as fw:
         fw.write("\n".join(dist_paths_error))

@@ -1,11 +1,11 @@
 import argparse
 import base64
-import glob
 import json
 import os
 
 import weave
 from openai import OpenAI
+from utils import assign_level, load_json
 
 OPENAI_API_KEY = "sk-tE7K8vJ9Dla5zDMx87F9EeB7372340C68067179938991e54"
 OPENAI_API_BASE = "https://api.gpt.ge/v1"
@@ -14,10 +14,11 @@ client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 parser = argparse.ArgumentParser(
     description="To Prompt GPT-4 for Image Quality Assessment"
 )
-parser.add_argument("--meta_dir", type=str, required=True)
+parser.add_argument("--meta_file", type=str, required=True)
+parser.add_argument("--desp_file", type=str, required=True)
+parser.add_argument("--assess_file", type=str, required=True)
 parser.add_argument("--image_folder", type=str, required=True)
-parser.add_argument("--save_dir", type=str, required=True)
-parser.add_argument("--fail_dir", type=str, required=True)
+parser.add_argument("--assess_fail_dir", type=str, required=True)
 
 
 def encode_img(img_path):
@@ -52,13 +53,6 @@ def gpt4v(img_path, query):
             {
                 "role": "user",
                 "content": [
-                    # {
-                    #     "type": "text",
-                    #     "text": (
-                    #         "How can i give you the base64 encoded image which is encoded by 'img_base64 = base64.b64encode(img_file.read()).decode('utf-8')?"
-                    #         + "Can i give you like {'type': 'image_url','url': 'data:{mime_type};base64,{img_base64}'}?"
-                    #     ),
-                    # },
                     {"type": "text", "text": query},
                     {
                         "type": "image_url",
@@ -80,15 +74,22 @@ if __name__ == "__main__":
     idx_meta_start = 0
     idx_meta_end = -1
 
-    meta_dir = args.meta_dir
-    meta_paths = sorted(glob.glob(os.path.join(meta_dir, "*.json")))
-    save_dir = args.save_dir
-    fail_dir = args.fail_dir
-    desp_dir = "./data/description"
+    meta_file = args.meta_file
+    desp_file = args.desp_file
+    assess_file = args.assess_file
     image_folder = args.image_folder
-    os.makedirs(save_dir, exist_ok=True)
-    os.makedirs(fail_dir, exist_ok=True)
-    os.makedirs(desp_dir, exist_ok=True)
+    fail_dir = args.assess_fail_dir
+
+    meta_data = load_json(meta_file)
+    if os.path.exists(desp_file):
+        desp_data = load_json(desp_file)
+    else:
+        print("Please generate description first")
+    if os.path.exists(assess_file):
+        assess_data = load_json(assess_file)
+    else:
+        assess_data = []
+
     # question pool
     question_pool = [
         "Can you provide a detailed evaluation of the image’s quality",
@@ -111,31 +112,26 @@ if __name__ == "__main__":
 
     # description_query
     dist_paths_error = []
-    for idx_meta, meta_path in enumerate(meta_paths[idx_meta_start:idx_meta_end]):
+    for idx_meta, meta_item in enumerate(meta_data[idx_meta_start:idx_meta_end]):
         print("=" * 100)
         print(idx_meta + idx_meta_start)
-
-        meta_name = os.path.basename(meta_path)
-        desp_path = os.path.join(desp_dir, meta_name)
-        save_path = os.path.join(save_dir, meta_name)
-        if os.path.exists(save_path):
-            print(f"{save_path} has been generated, skip.")
+        img_name = meta_item["filename"]
+        if img_name in [item["filename"] for item in assess_data]:
+            print(f"{img_name} has been generated, skip.")
             continue
-
-        with open(meta_path) as fr:
-            meta = json.load(fr)
-        img_name = meta["filename"]
         img_path = os.path.join(image_folder, img_name)
-        dist_class = meta["distortion"]
-        score = meta["mos"]
-
-        try:
-            with open(desp_path) as fr:
-                description = json.load(fr)["gpt4v_description"]
-        except Exception as e:
-            print(f"Error: {e}")
-            dist_paths_error.append(desp_path)
+        desp_item = next(
+            (item for item in desp_data if item["filename"] == img_name), None
+        )
+        if desp_item:
+            description = desp_item["gpt4v_description"]
+        else:
+            print(f"{img_name} has no description, please generate description first.")
             continue
+
+        dist_class = meta_item["distortion"]
+        score = meta_item["mos"]
+        level = assign_level(score)
 
         # assess_query
         assess_query = (
@@ -155,16 +151,16 @@ if __name__ == "__main__":
             + "First, a short description of the image content which summaries the detailed description, please answer in one sentence. "
             + "Second, The location of the distortions in the image and how they affect the quality of specific objects. Describe the distortions' positions using natural language, and explain their impact on the objects near the distortions. "
             + "Instead of directly mentioning the bounding box coordinates, utilize this data to describe the location of distortions using natural language. Include details like relative position between distortions and near normal regions."
-            + "Third, a summary of the overall quality of the evaluated image. Use the mean opinion score as a basis for your assessment but do not tell anything related to the score."
+            + "Third, summarize the overall quality of the evaluated image in the following format: "
+            + f"The quality of the image is {level}. [Your reasoning here]."
             + "When using the information from the caption and coordinates, directly explain the scene, and do not mention that the information source is the caption or the bounding box. "
             + "The whole response must be below 150 words."
         )
 
         try:
             content = gpt4v(img_path, assess_query)
-            meta["gpt4v_assessment"] = content
-            with open(save_path, "w") as fw:
-                fw.write(json.dumps(meta, indent=4))
+            meta_item["gpt4v_assessment"] = content
+            assess_data.append(meta_item)
         except:
             import sys
 
@@ -179,6 +175,10 @@ if __name__ == "__main__":
             print(exc_dict)
             dist_paths_error.append(img_name)
 
+    with open(assess_file, "w") as fw:
+        json.dump(assess_data, fw, indent=4, ensure_ascii=False)
+
+    os.makedirs(fail_dir, exist_ok=True)
     fail_path = os.path.join(fail_dir, "res_fail.txt")
     with open(fail_path, "w") as fw:
         fw.write("\n".join(dist_paths_error))

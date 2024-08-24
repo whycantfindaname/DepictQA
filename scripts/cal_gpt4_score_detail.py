@@ -6,6 +6,7 @@ from openai import OpenAI
 OPENAI_API_KEY = "sk-tE7K8vJ9Dla5zDMx87F9EeB7372340C68067179938991e54"
 OPENAI_API_BASE = "https://api.gpt.ge/v1"
 
+
 parser = argparse.ArgumentParser(description="evaluation parameters for DepictQA")
 parser.add_argument("--pred_path", type=str, required=True)
 parser.add_argument("--gt_path", type=str, required=True)
@@ -90,10 +91,9 @@ if __name__ == "__main__":
 
         for entry in gt_metas:
             gt_images.append(entry["image"])
-            gt_answers.append(entry["conversations"][1]["value"])
-            gt_questions.append(entry["conversations"][0]["value"])
+            gt_answers.append(entry["conversations"][3]["value"])
+            gt_questions.append(entry["conversations"][2]["value"])
 
-    # print(gt_answers)
     # check if the two lists are the same
 
     assert pred_images == gt_images
@@ -111,14 +111,19 @@ if __name__ == "__main__":
     save_path = args.save_path
 
     review_file = open(save_path, "a")
+
+    results = []
+
     for idx in range(len(pred_answers)):
         assert pred_images[idx] == gt_images[idx]
         pred = {"image": pred_images[idx], "answer": pred_answers[idx]}
         gt = {"question": gt_questions[idx], "answer": gt_answers[idx]}
         image = pred["image"]
+
         if image in handled_images:
             print(f"Image {image} has been handled")
             continue
+
         print("=" * 100)
         print(f"Handling {image}")
 
@@ -146,10 +151,13 @@ if __name__ == "__main__":
         cur_js["content"] = review
         cur_js["score"] = score
         print(cur_js)
-        review_file.write(json.dumps(cur_js) + "\n")
-        review_file.flush()
 
-    review_file.close()
+        # 将当前结果添加到结果列表中
+        results.append(cur_js)
+
+    # 将所有结果保存为列表形式的JSON文件
+    with open(save_path, "w") as review_file:
+        json.dump(results, review_file, ensure_ascii=False, indent=4)
 
     scores = [_ for _ in scores if _ >= 0]
     score = sum(scores) / len(scores)
