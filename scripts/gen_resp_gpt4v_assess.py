@@ -7,8 +7,8 @@ import weave
 from openai import OpenAI
 from utils import assign_level, load_json
 
-OPENAI_API_KEY = "sk-tE7K8vJ9Dla5zDMx87F9EeB7372340C68067179938991e54"
-OPENAI_API_BASE = "https://api.gpt.ge/v1"
+OPENAI_API_KEY = ""
+OPENAI_API_BASE = ""
 client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
 parser = argparse.ArgumentParser(
