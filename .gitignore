@@ -1,5 +1,4 @@
 data/
-!data/meta_json
 results/
 results_v0/
 __pycache__
