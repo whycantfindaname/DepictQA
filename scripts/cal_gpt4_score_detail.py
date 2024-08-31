@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 
+import weave
 from openai import OpenAI
 
 OPENAI_API_KEY = "sk-tE7K8vJ9Dla5zDMx87F9EeB7372340C68067179938991e54"
@@ -19,10 +21,10 @@ DEFAULT_SETTINGS = {
     + "The user asks the question on assessing the image quality. "
     + "The ground truth is given for your evaluation. "
     + "Please rate the consistency between the assistant's response and the ground truth. "
-    + "Pay attention to the distortion analyses. "
+    + "Pay attention to the distortion analyses and quality judgements. "
     + "The assistant receives an overall score on a scale of 0 to 10, where a higher score indicates better performance. "
-    + "Please first output a single line containing ONLY ONE INT NUMBER indicating the score of the assistant. "
-    + "In the subsequent line, please provide a comprehensive explanation of your evaluation, avoiding any potential bias.\n",
+    + "Please output a single line containing ONLY ONE INT NUMBER indicating the score of the assistant. ",
+    # + "In the subsequent line, please provide a comprehensive explanation of your evaluation, avoiding any potential bias.\n",
 }
 
 
@@ -40,6 +42,7 @@ def parse_score(review):
         return -1
 
 
+@weave.op()
 def gen_res_from_gpt(content):
     gpt_model = "gpt-4-turbo"
 
@@ -64,8 +67,11 @@ def gen_res_from_gpt(content):
 
 
 if __name__ == "__main__":
+    weave.init("generate gpt score")
     args = parser.parse_args()
 
+    image_path = "/home/liaowenjie/桌面/画质大模型/datasets/QualityLLM_single_2w"
+    image_list = os.listdir(image_path)
     # load predict results
     pred_path = args.pred_path
     if pred_path.endswith(".json"):
@@ -75,8 +81,11 @@ if __name__ == "__main__":
             pred_metas = json.load(fr)
 
             for entry in pred_metas:
-                pred_images.append(entry["image"])
-                pred_answers.append(entry["generated_answer"])
+                if entry["image"] in image_list:
+                    pred_images.append(entry["image"])
+                    pred_answers.append(entry["pred_answer"])
+                else:
+                    continue
     # else:
     #    assert pred_path.endswith(".json")
     #    with open(pred_path) as fr:
@@ -90,9 +99,12 @@ if __name__ == "__main__":
         gt_metas = json.load(fr)
 
         for entry in gt_metas:
-            gt_images.append(entry["image"])
-            gt_answers.append(entry["conversations"][3]["value"])
-            gt_questions.append(entry["conversations"][2]["value"])
+            if entry["image"] in image_list:
+                gt_images.append(entry["image"])
+                gt_answers.append(entry["conversations"][5]["value"])
+                gt_questions.append(entry["conversations"][4]["value"])
+            else:
+                continue
 
     # check if the two lists are the same
 
@@ -146,9 +158,9 @@ if __name__ == "__main__":
         }
 
         review = gen_res_from_gpt(content)
-        score = parse_score(review)
+        score = float(review)
         scores.append(score)
-        cur_js["content"] = review
+        # cur_js["content"] = review
         cur_js["score"] = score
         print(cur_js)
 

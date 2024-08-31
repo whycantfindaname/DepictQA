@@ -18,7 +18,7 @@ categories_list = [
     "Meaningless solid color",  # 纯色无意义
     "Aliasing",  # 锯齿
     "Low clarity",  # 清晰度低
-    "Too dark",  # 过暗
+    "Excessive darkness",  # 过暗
     "Compression artifacts",  # 压缩失真块效应
     "Out of focus blur",  # 对焦模糊
     "Overexposure",  # 过曝
@@ -35,7 +35,7 @@ category_translation = {
     "纯色无意义": "Meaningless solid color",
     "锯齿": "Aliasing",
     "清晰度低": "Low clarity",
-    "过暗": "Too dark",
+    "过暗": "Excessive darkness",
     "压缩失真块效应": "Compression artifacts",
     "对焦模糊": "Out of focus blur",
     "过曝": "Overexposure",
@@ -153,6 +153,24 @@ def replace_categories(data):
     return data
 
 
+def merge_json_simple(file1, file2, output_file):
+    data1 = load_json(file1)
+    data2 = load_json(file2)
+
+    # Ensure data1 and data2 are lists
+    if isinstance(data1, dict):
+        data1 = list(data1.values())
+    if isinstance(data2, dict):
+        data2 = list(data2.values())
+
+    # Merge the records from both files into a single list
+    merged_data = data1 + data2
+
+    # Write the filtered data to the output file
+    with open(output_file, "w", encoding="utf-8") as f_out:
+        json.dump(merged_data, f_out, ensure_ascii=False, indent=4)
+
+
 def merge_json_files(file1, file2, output_file):
     """
     This will merge two JSON files into one and remove any records that do not have both 'filename' and 'mos' fields.
@@ -189,7 +207,7 @@ def merge_json_files(file1, file2, output_file):
         json.dump(filtered_data, f_out, ensure_ascii=False, indent=4)
 
 
-def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder, save_folder):
+def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
     """
     This will merge all JSON files in the specified folder into one JSON file by sequentially merging each file's content.
     Before merging, Chinese categories will be replaced with corresponding English ones. Images not in the image_folder will
@@ -199,7 +217,6 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder, save_fo
     - meta_folder: str - The path to the folder containing JSON files.
     - output_file: str - The path where the merged JSON file will be saved.
     - image_folder: str - The path which contains all images
-    - save_folder: str - The path where the corresponding images are saved.
     The output JSON file will be a list of dictionaries, each representing a valid record from the JSON files in the folder.
     """
     json_files = [
@@ -212,7 +229,6 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder, save_fo
         logging.info("No JSON files found in the specified folder.")
         return
 
-    os.makedirs(save_folder, exist_ok=True)
     merged_data = []
 
     for json_file in json_files:
@@ -224,10 +240,7 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder, save_fo
                 # Extract 'filename' and 'mos'
                 filename = data["filename"]
                 image_path = os.path.join(image_folder, filename)
-                save_path = os.path.join(save_folder, filename)
                 if os.path.exists(image_path):
-                    if not os.path.exists(save_path):
-                        shutil.copy(image_path, save_path)
                     mos = data["mos"]
 
                     # Extract other key-value pairs into a new dictionary under 'distortion'
@@ -367,6 +380,7 @@ def construct_chat_template(
     save_folder,
     output_file,
     model_name="qwen-vl-chat",
+    keep_mos=False,
     bbox_provided=True,
 ):
     """
@@ -418,12 +432,19 @@ def construct_chat_template(
             else assess["gpt4v_assessment"].split("\n")
         )
 
-        new_data = {
-            "image": desp["filename"],
-            "conversations": [],
-        }
-
         score = meta_item.get("mos", "")
+        if keep_mos:
+            new_data = {
+                "image": desp["filename"],
+                "conversations": [],
+                "mos": score,
+            }
+        else:
+            new_data = {
+                "image": desp["filename"],
+                "conversations": [],
+            }
+
         distortion = meta_item.get("distortion", {})
         distortion_types = distortion.keys()
         distortion_list = ", ".join(distortion_types) if distortion_types else "None"

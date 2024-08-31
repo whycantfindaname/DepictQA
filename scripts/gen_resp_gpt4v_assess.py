@@ -72,7 +72,7 @@ if __name__ == "__main__":
     weave.init("image quality assessment")
     args = parser.parse_args()
     idx_meta_start = 0
-    idx_meta_end = -1
+    idx_meta_end = 1
 
     meta_file = args.meta_file
     desp_file = args.desp_file
@@ -133,7 +133,6 @@ if __name__ == "__main__":
         score = meta_item["mos"]
         level = assign_level(score)
 
-        # assess_query
         assess_query = (
             "You are an expert in image quality assessment. You receive an image and a detailed description of the image. "
             + f"The detailed description is: {description}. "
@@ -141,19 +140,20 @@ if __name__ == "__main__":
             + f"The Mean Opinion Score of the image is {score} (out of 5). "
             + "The higher the score, the lower the overall degree of degradation. "
             + "You will also receive the bounding box information for the distorted regions. "
-            + "The bounding box information is in the form of [{'tl':{x, y}, 'tr':{x, y}, 'br':{x, y}, 'bl':{x, y}}], where tl is the top-left corner, tr is the top-right corner, br is the bottom-right corner, and bl is the bottom-left corner. "
+            + "The bounding box information is in the form of [{'tl':{x, y}, 'br':{x, y}}], where tl is the top-left corner, and br is the bottom-right corner. "
             + f"The distortions present in the image and their locations are as follows: {', '.join([f'{name} with bounding box {bbox}' for name, bbox in dist_class.items()])}. "
             + "Please create a plausible question about the image and provide the answer in detail. "
-            + f"Sample one question from the following list of pool: {question_pool} as the input question"
+            + f"Sample one question from the following list of pool: {question_pool} as the input question."
             + "Please arrange your answer in the following format: "
             + "Question: the question you sampled from the pool "
-            + "Answer: your answer to the question, which should cover the following three areas. "
-            + "First, a short description of the image content which summaries the detailed description, please answer in one sentence. "
-            + "Second, The location of the distortions in the image and how they affect the quality of specific objects. Describe the distortions' positions using natural language, and explain their impact on the objects near the distortions. "
-            + "Instead of directly mentioning the bounding box coordinates, utilize this data to describe the location of distortions using natural language. Include details like relative position between distortions and near normal regions."
+            + "Answer: your answer to the question, which should cover the following three parts. "
+            + "First, a short description of the image content which summarizes the detailed description; please answer in one sentence. "
+            + "Second, the location of the distortions in the image and how they affect the quality of specific objects within the bounding box areas. Focus on the local impact of each distortion, describing how it degrades the quality of objects in its vicinity. "
+            + "Instead of directly mentioning the bounding box coordinates, utilize this data to describe the location of distortions using natural language. Include details like relative positions between distortions and near-normal regions."
             + "Third, summarize the overall quality of the evaluated image in the following format: "
             + f"The quality of the image is {level}. [Your reasoning here]."
-            + "When using the information from the caption and coordinates, directly explain the scene, and do not mention that the information source is the caption or the bounding box. "
+            + "In this part, you should logically describe the relationships between different distortions, explain how they might interact, overlap, or influence each other, and how these interactions affect the overall quality of the image."
+            + "When you describe the distortions, you must strictly use the exact distortion names provided, and do not use any variations, synonyms, or alternative expressions."
             + "The whole response must be below 150 words."
         )
 
