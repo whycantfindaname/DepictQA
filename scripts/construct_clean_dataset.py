@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # meta_path = "data/meta_data.json"
     # clean_path = "data/clean_data.json"
     # image_folder = "/home/liaowenjie/桌面/画质大模型/datasets/QualityLLM_single_2w"
-    # save_path = "data/images"
+
     args = parser.parse_args()
     meta_folder = args.meta_folder
     json_save_path = args.json_save_path

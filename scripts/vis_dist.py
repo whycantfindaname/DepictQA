@@ -1,15 +1,9 @@
-from utils import plot_mos_distribution
+from utils import plot_bbox_dist, plot_mos_distribution
 
 if __name__ == "__main__":
-    train_file = "data/kadid_json/train_kadid_with_mos.json"
-    val_file = "data/kadid_json/val_kadid_with_mos.json"
-    train_path = "./results/vis/train_kadid_mos_dist.png"
-    val_path = "./results/vis/val_kadid_mos_dist.png"
-    # plot_bbox_dist(json_file, image_folder, bbox_dist_path)
-    # plot_mos_distribution(train_file, train_path)
-    # plot_mos_distribution(val_file, val_path)
-    plot_mos_distribution("data/clean_data.json", "results/vis/single_mos_dist.png")
-    # plot_score_distribution(
-    #     "./results/llava/llava_gpt4_score_detail.json",
-    #     "./results/llava/llava_score_dist.png",
-    # )
+    image_folder = "/home/liaowenjie/桌面/画质大模型/datasets/QualityLLM_single_2w"
+    json_file = "dataset/clean_data_v1/clean_data.json"
+    bbox_dist_path = "results-8k/vis_clean_v1/single_bbox_dist.png"
+    mos_path = "results-8k/vis_clean_v1/single_mos_dist.png"
+    plot_bbox_dist(json_file, image_folder, bbox_dist_path)
+    plot_mos_distribution(json_file, mos_path)

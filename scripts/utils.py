@@ -224,7 +224,8 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
         for f in os.listdir(meta_folder)
         if f.endswith(".json")
     ]
-
+    save_dir = os.path.dirname(output_file)
+    os.makedirs(save_dir, exist_ok=True)
     if not json_files:
         logging.info("No JSON files found in the specified folder.")
         return
@@ -232,6 +233,7 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
     merged_data = []
 
     for json_file in json_files:
+        print(json_file)
         with open(json_file, "r", encoding="utf-8") as f:
             content = json.load(f)
         for key, data in content.items():
@@ -239,7 +241,22 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
             if "filename" in data and "mos" in data:
                 # Extract 'filename' and 'mos'
                 filename = data["filename"]
-                image_path = os.path.join(image_folder, filename)
+                if filename.lower().endswith(".bmp"):
+                    # Construct the full file path
+                    bmp_path = os.path.join(image_folder, filename)
+                    # Open the .bmp image
+                    with Image.open(bmp_path) as img:
+                        # Change the filename extension from .bmp to .png
+                        png_filename = filename.rsplit(".", 1)[0] + ".png"
+                        png_path = os.path.join(image_folder, png_filename)
+                        # Save the image in .png format
+                        img.save(png_path, "PNG")
+                    print(f"Converted: {filename} to {png_filename}")
+                    image_path = png_path
+                    filename = png_filename
+                else:
+                    image_path = os.path.join(image_folder, filename)
+
                 if os.path.exists(image_path):
                     mos = data["mos"]
 
@@ -247,7 +264,6 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
                     distortion = {
                         k: v for k, v in data.items() if k not in ["filename", "mos"]
                     }
-
                     # If distortion is not empty, add to merged data
                     if distortion:
                         new_data = {
@@ -257,6 +273,14 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
                         }
                         # Replace Chinese categories with English ones
                         new_data = replace_categories(new_data)
+                        merged_data.append(new_data)
+                    elif mos >= 4:
+                        new_data = {
+                            "filename": filename,
+                            "mos": mos,
+                            "distortion": "There is no distortion in image.",
+                        }
+                        print(filename)
                         merged_data.append(new_data)
 
     # Write the merged data to the output file
@@ -305,7 +329,7 @@ def get_images_from_folder(folder_path):
     }
 
 
-def modify_kadid(file_path, output_path, keep_mos=False):
+def modify_iqadata(file_path, output_path, keep_mos=False):
     # Load the JSON data
     with open(file_path, "r") as file:
         data = json.load(file)
@@ -320,7 +344,7 @@ def modify_kadid(file_path, output_path, keep_mos=False):
             item["mos"] = mos_value
 
         # Modify the "image" field to remove the "kadid10k/" part
-        item["image"] = item["image"].replace("kadid10k/", "")
+        item["image"] = item["image"]
 
         # Update the "value" field in the human conversation
 
@@ -332,17 +356,17 @@ def modify_kadid(file_path, output_path, keep_mos=False):
                     + conversation["value"].replace("\n", "").replace("<|image|>", "")
                     + "Answer in a single sentence."
                 )
-        if mos_value >= 4.5:
-            dist_question = {
-                "from": "human",
-                "value": "What types of distortions are present in the image?",
-            }
-            dist_answer = {
-                "from": "gpt",
-                "value": "There is no distortion in the image.",
-            }
-            item["conversations"].append(dist_question)
-            item["conversations"].append(dist_answer)
+        # if mos_value >= 4.5:
+        #     dist_question = {
+        #         "from": "human",
+        #         "value": "What types of distortions are present in the image?",
+        #     }
+        #     dist_answer = {
+        #         "from": "gpt",
+        #         "value": "There is no distortion in the image.",
+        #     }
+        #     item["conversations"].append(dist_question)
+        #     item["conversations"].append(dist_answer)
     dir = os.path.dirname(output_path)
     os.makedirs(dir, exist_ok=True)
     # Save the modified data back to a JSON file
@@ -465,7 +489,7 @@ def construct_chat_template(
                 .replace("Answer: ", "")
                 .strip()  # This removes leading or trailing spaces
                 if len(description_parts) > 1
-                else ""
+                else description_parts
             ),
         }
         new_data["conversations"].append(desp_question)
@@ -704,7 +728,7 @@ def filter_bboxes(bboxes, image_width, image_height):
         area = calculate_area(bbox)
         area_ratio = area / (image_width * image_height)
 
-        if area_ratio > 0.7:
+        if area_ratio > 0.8:
             large_bboxes.append(bbox)
         else:
             small_bboxes.append(bbox)
@@ -764,12 +788,13 @@ def clean_bbox_json(json_file, image_folder, save_path):
 
                 # Update original data structure with filtered bboxes
                 entry["distortion"][distortion_type] = filtered_bboxes
-        except Exception:
-            error.append(image)
-        with open("short_of_image.json", "w", encoding="utf-8") as e_out:
-            json.dump(error, e_out, ensure_ascii=False, indent=4)
+        except Exception as e:
+            if str(e) != "'str' object has no attribute 'items'":
+                error.append(str(e))
     with open(save_path, "w", encoding="utf-8") as f_out:
         json.dump(data, f_out, ensure_ascii=False, indent=4)
+    with open("error.json", "w", encoding="utf-8") as e_out:
+        json.dump(error, e_out, ensure_ascii=False, indent=4)
 
 
 def plot_bbox_dist(json_file, image_folder, output_path=None):
@@ -784,6 +809,9 @@ def plot_bbox_dist(json_file, image_folder, output_path=None):
     Returns:
     - List of bounding box area ratios.
     """
+    if output_path:
+        save_folder = os.path.dirname(output_path)
+        os.makedirs(save_folder, exist_ok=True)
     bbox_areas = []
     image_areas = []
 
@@ -791,13 +819,16 @@ def plot_bbox_dist(json_file, image_folder, output_path=None):
         image_path = os.path.join(image_folder, data["filename"])
         image_width, image_height = Image.open(image_path).size
         total_image_area = image_width * image_height
-        for boxes in data["distortion"].values():
-            for box in boxes:
-                tl_x, tl_y = box["tl"]["x"], box["tl"]["y"]
-                br_x, br_y = box["br"]["x"], box["br"]["y"]
-                bbox_area = (br_x - tl_x) * (br_y - tl_y)
-                bbox_areas.append(bbox_area)
-                image_areas.append(total_image_area)
+        try:
+            for boxes in data["distortion"].values():
+                for box in boxes:
+                    tl_x, tl_y = box["tl"]["x"], box["tl"]["y"]
+                    br_x, br_y = box["br"]["x"], box["br"]["y"]
+                    bbox_area = (br_x - tl_x) * (br_y - tl_y)
+                    bbox_areas.append(bbox_area)
+                    image_areas.append(total_image_area)
+        except Exception:
+            pass
 
     with open(json_file, "r") as file:
         for data in json.load(file):
