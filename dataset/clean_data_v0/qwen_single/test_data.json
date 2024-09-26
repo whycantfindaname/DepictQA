@@ -1,0 +1,738 @@
+[
+    {
+        "id": "08357.jpg->85.17",
+        "image": "spaq/08357.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Could you evaluate the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.17,
+        "quality": "excellent"
+    },
+    {
+        "id": "09705.jpg->90.25",
+        "image": "spaq/09705.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 90.25,
+        "quality": "excellent"
+    },
+    {
+        "id": "07469.jpg->85.5",
+        "image": "spaq/07469.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What do you think about the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.5,
+        "quality": "excellent"
+    },
+    {
+        "id": "08427.jpg->89.33",
+        "image": "spaq/08427.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 89.33,
+        "quality": "excellent"
+    },
+    {
+        "id": "10188.jpg->85.86",
+        "image": "spaq/10188.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.86,
+        "quality": "excellent"
+    },
+    {
+        "id": "06831.jpg->88.5",
+        "image": "spaq/06831.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 88.5,
+        "quality": "excellent"
+    },
+    {
+        "id": "01942.jpg->87.11",
+        "image": "spaq/01942.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you rate the quality of this image?\n<|image|>How do you assess the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.11,
+        "quality": "excellent"
+    },
+    {
+        "id": "08625.jpg->87.6",
+        "image": "spaq/08625.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Could you evaluate the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.6,
+        "quality": "excellent"
+    },
+    {
+        "id": "04667.jpg->87.67",
+        "image": "spaq/04667.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.67,
+        "quality": "excellent"
+    },
+    {
+        "id": "01202.jpg->85.14",
+        "image": "spaq/01202.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.14,
+        "quality": "excellent"
+    },
+    {
+        "id": "09777.jpg->86.88",
+        "image": "spaq/09777.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What do you think about the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86.88,
+        "quality": "excellent"
+    },
+    {
+        "id": "10890.jpg->86.29",
+        "image": "spaq/10890.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you rate the quality of this image?\n<|image|>How do you assess the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86.29,
+        "quality": "excellent"
+    },
+    {
+        "id": "07259.jpg->90.5",
+        "image": "spaq/07259.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What do you think about the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 90.5,
+        "quality": "excellent"
+    },
+    {
+        "id": "08872.jpg->85.29",
+        "image": "spaq/08872.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.29,
+        "quality": "excellent"
+    },
+    {
+        "id": "10892.jpg->87.83",
+        "image": "spaq/10892.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you rate the quality of this image?\n<|image|>How do you assess the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.83,
+        "quality": "excellent"
+    },
+    {
+        "id": "09663.jpg->88.25",
+        "image": "spaq/09663.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What's your opinion on the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 88.25,
+        "quality": "excellent"
+    },
+    {
+        "id": "08452.jpg->85.33",
+        "image": "spaq/08452.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.33,
+        "quality": "excellent"
+    },
+    {
+        "id": "06792.jpg->89.0",
+        "image": "spaq/06792.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 89,
+        "quality": "excellent"
+    },
+    {
+        "id": "08806.jpg->86.25",
+        "image": "spaq/08806.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86.25,
+        "quality": "excellent"
+    },
+    {
+        "id": "09227.jpg->85.56",
+        "image": "spaq/09227.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What do you think about the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.56,
+        "quality": "excellent"
+    },
+    {
+        "id": "05201.jpg->87.5",
+        "image": "spaq/05201.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Could you evaluate the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.5,
+        "quality": "excellent"
+    },
+    {
+        "id": "10885.jpg->86.5",
+        "image": "spaq/10885.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86.5,
+        "quality": "excellent"
+    },
+    {
+        "id": "01235.jpg->85.71",
+        "image": "spaq/01235.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.71,
+        "quality": "excellent"
+    },
+    {
+        "id": "10118.jpg->85.71",
+        "image": "spaq/10118.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Could you evaluate the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.71,
+        "quality": "excellent"
+    },
+    {
+        "id": "06900.jpg->85.5",
+        "image": "spaq/06900.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.5,
+        "quality": "excellent"
+    },
+    {
+        "id": "08627.jpg->85.33",
+        "image": "spaq/08627.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.33,
+        "quality": "excellent"
+    },
+    {
+        "id": "07254.jpg->87.0",
+        "image": "spaq/07254.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87,
+        "quality": "excellent"
+    },
+    {
+        "id": "08643.jpg->87.6",
+        "image": "spaq/08643.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.6,
+        "quality": "excellent"
+    },
+    {
+        "id": "06451.jpg->93.33",
+        "image": "spaq/06451.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 93.33,
+        "quality": "excellent"
+    },
+    {
+        "id": "09870.jpg->86.0",
+        "image": "spaq/09870.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What's your opinion on the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86,
+        "quality": "excellent"
+    },
+    {
+        "id": "05657.jpg->86.63",
+        "image": "spaq/05657.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86.63,
+        "quality": "excellent"
+    },
+    {
+        "id": "00999.jpg->87.33",
+        "image": "spaq/00999.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What do you think about the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.33,
+        "quality": "excellent"
+    },
+    {
+        "id": "04690.jpg->86.0",
+        "image": "spaq/04690.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86,
+        "quality": "excellent"
+    },
+    {
+        "id": "11043.jpg->87.33",
+        "image": "spaq/11043.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What do you think about the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.33,
+        "quality": "excellent"
+    },
+    {
+        "id": "10336.jpg->86.0",
+        "image": "spaq/10336.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86,
+        "quality": "excellent"
+    },
+    {
+        "id": "03115.jpg->87.56",
+        "image": "spaq/03115.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.56,
+        "quality": "excellent"
+    },
+    {
+        "id": "07275.jpg->88.0",
+        "image": "spaq/07275.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you judge the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 88,
+        "quality": "excellent"
+    },
+    {
+        "id": "02372.jpg->85.7",
+        "image": "spaq/02372.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.7,
+        "quality": "excellent"
+    },
+    {
+        "id": "03896.jpg->86.77",
+        "image": "spaq/03896.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you rate the quality of this image?\n<|image|>How do you assess the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86.77,
+        "quality": "excellent"
+    },
+    {
+        "id": "07337.jpg->93.67",
+        "image": "spaq/07337.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Could you evaluate the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 93.67,
+        "quality": "excellent"
+    },
+    {
+        "id": "02539.jpg->87.27",
+        "image": "spaq/02539.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What's your opinion on the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.27,
+        "quality": "excellent"
+    },
+    {
+        "id": "04148.jpg->85.17",
+        "image": "spaq/04148.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Can you rate the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 85.17,
+        "quality": "excellent"
+    },
+    {
+        "id": "06858.jpg->86.0",
+        "image": "spaq/06858.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Could you evaluate the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 86,
+        "quality": "excellent"
+    },
+    {
+        "id": "07298.jpg->91.67",
+        "image": "spaq/07298.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "How would you rate the quality of this image?\n<|image|>How do you assess the quality of this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 91.67,
+        "quality": "excellent"
+    },
+    {
+        "id": "07120.jpg->87.4",
+        "image": "spaq/07120.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What is your quality rating for this image?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 87.4,
+        "quality": "excellent"
+    },
+    {
+        "id": "06798.jpg->93.5",
+        "image": "spaq/06798.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "What's your opinion on the quality of this picture?\n<|image|>"
+            },
+            {
+                "from": "gpt",
+                "value": "The quality of the image is excellent."
+            }
+        ],
+        "gt_score": 93.5,
+        "quality": "excellent"
+    }
+]
