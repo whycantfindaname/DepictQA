@@ -46,25 +46,12 @@ Official pytorch implementation of the papers:
 
 ## Scripts
 
-- cd the scripts directory: `cd ./scripts`. 
+- cd the scripts directory: `cd ./scripts`.
 
-- You should run the scripts according to the sequence as follows. 
+- 对meta_json的处理在labels_res_cleaning.py中，可以根据需要修改。
 
-    | Script | Description |
-    | -------- | -------- |
-    |`./scripts/combine_json.py`| combine many meta jsons to one|
-    | `./scripts/split_json.py` | split the example annotation file into one image per file |
-    | `./scripts/extract_json.py` | find the corresponding image from example image datasets for each file |
-    | `./scripts/convert_json.py` | combine the each distortion and bounding box information into distortion class|
-    |`./scripts/distortion_dist.py`| draw the distribution of distortion types|
-    |`./scripts/draw_bbox.py`| draw the bounding box and corresponding distortion type on the image|
-    |`./scripts/bbox_dist.py`| draw the distribution of bounding box sizes|
-    |`./scripts/gen_resp_desp.sh`|generate the image description from GPT-4  |
-    |`./scripts/gen_resp_assess.sh`|generate the image assessment from GPT-4  |
-    | `./scripts/image_distribution.py` | draw the distribution of image sizes|
-    | `./scripts/train_and_val.py` | split prompts into training and validation sets |
-    |`./scripts/check.py`| check whether the images correspond to train and val sets|
-    | `./scripts/gen_gpt_score.sh` | GPT-4 score of quality accessment and reasoning tasks. You should generate the answer from the finetuned model before running this script. |
-    |`./scripts/draw_score.py`| draw the distribution of gpt4-score|
+- 常用工具都在`utils.py`中，可以根据需要修改。可能需要增加可视化工具。推荐mmcv或者直接用qwen的tokenizer的draw_bbox_on_latest_picture函数
+
+- gpt4v生成assess和description的文件后面要加上对手动降质数据格式的适配，尝试使用gpt4o进行标注。
 
 - The important results will be mainly saved in the `./results` directory.  

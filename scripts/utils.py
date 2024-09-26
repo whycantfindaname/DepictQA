@@ -763,7 +763,7 @@ def filter_bboxes(bboxes, image_width, image_height):
     for bbox in bboxes:
         area = calculate_area(bbox)
         area_ratio = area / (image_width * image_height)
-
+        # TODO： 可能可以砍得再狠一点
         if area_ratio > 0.7:
             large_bboxes.append(bbox)
         else:
@@ -779,6 +779,7 @@ def filter_bboxes(bboxes, image_width, image_height):
         bbox = small_bboxes.pop(0)
         add_bbox = True
         for filtered_bbox in filtered_bboxes:
+            # TODO: 这里的iou可以再调一下，找到更好的阈值
             if calculate_iou(bbox, filtered_bbox) > 0.6:
                 if calculate_area(bbox) < calculate_area(filtered_bbox):
                     filtered_bboxes.remove(filtered_bbox)
