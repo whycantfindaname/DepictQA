@@ -16,14 +16,16 @@ parser.add_argument("--save_path", type=str, required=True)
 
 
 DEFAULT_SETTINGS = {
-    "system_prompt": "You are a helpful and precise assistant for checking the quality of the answer.",
+   "system_prompt": "You are a helpful and understanding assistant for providing a balanced assessment of the answer quality.",
     "prompt": "We would like to request your feedback on the performance of an AI assistant in response to the user question displayed above. "
-    + "The user asks the question on assessing the image quality. "
-    + "The ground truth is given for your evaluation. "
-    + "Please rate the consistency between the assistant's response and the ground truth. "
-    + "Pay attention to the distortion analyses and quality judgements. "
-    + "The assistant receives an overall score on a scale of 0 to 10, where a higher score indicates better performance. "
-    + "Please output a single line containing ONLY ONE INT NUMBER indicating the score of the assistant. ",
+    + "The user asks a question about assessing image quality. "
+    + "The ground truth is provided for reference, but your evaluation should focus on the overall usefulness and relevance of the assistant's response. "
+    + "While evaluating, consider the image description, distortion analysis, and quality judgment, but allow for flexibility and reasonable variations in interpretation. "
+    + "You should also pay attention to logic of the assistant's response, and ensure that the assistant is able to provide a clear and concise response. "
+    + "The assistant should be given an overall score on a scale of 0 to 10, where a higher score reflects better performance. "
+    + "Note that if the response contains inconsistencies in language (e.g., switching between different languages), unnecessary repetition, or unnatural phrasing, the score must be 0. "
+    + "If the response lacks logical coherence, or is incomplete, the score must also be 0. "
+    + "Please output a single line containing ONLY ONE INT NUMBER indicating the score of the assistant."
     # + "In the subsequent line, please provide a comprehensive explanation of your evaluation, avoiding any potential bias.\n",
 }
 
@@ -70,50 +72,39 @@ if __name__ == "__main__":
     weave.init("generate gpt score")
     args = parser.parse_args()
 
-    image_path = "/home/liaowenjie/桌面/画质大模型/datasets/QualityLLM_single_2w"
-    image_list = os.listdir(image_path)
     # load predict results
     pred_path = args.pred_path
-    if pred_path.endswith(".json"):
-        pred_images = []
-        pred_answers = []
-        with open(pred_path) as fr:
-            pred_metas = json.load(fr)
+    pred_images = []
+    pred_answers = []
+    with open(pred_path) as fr:
+        pred_metas = json.load(fr)
 
-            for entry in pred_metas:
-                if entry["image"] in image_list:
-                    pred_images.append(entry["image"])
-                    pred_answers.append(entry["pred_answer"])
-                else:
-                    continue
-    # else:
-    #    assert pred_path.endswith(".json")
-    #    with open(pred_path) as fr:
-    #       pred_metas = json.load(fr)
-
+    for entry in pred_metas:
+        if os.path.dirname(entry["image"]) == "QualityLLM_single_2w":
+            pred_images.append(entry["image"])
+            pred_answers.append(entry["conversation"][3]["value"])
     # load gt results
     with open(args.gt_path) as fr:
-        gt_images = []
-        gt_answers = []
-        gt_questions = []
         gt_metas = json.load(fr)
+    gt_images = []
+    gt_answers = []
+    gt_questions = []
+    for entry in gt_metas:
+        if os.path.dirname(entry["image"]) == "QualityLLM_single_2w":
+            gt_images.append(entry["image"])
+            gt_answers.append(entry["conversations"][5]["value"])
+            gt_questions.append(entry["conversations"][4]["value"])
 
-        for entry in gt_metas:
-            if entry["image"] in image_list:
-                gt_images.append(entry["image"])
-                gt_answers.append(entry["conversations"][5]["value"])
-                gt_questions.append(entry["conversations"][4]["value"])
-            else:
-                continue
 
     # check if the two lists are the same
-
     assert pred_images == gt_images
-    assert len(pred_answers) == len(gt_answers)
+    assert len(pred_answers) == len(gt_answers), f"{len(pred_answers)} vs {len(gt_answers)}"
     # Read existing review file content
     try:
         with open(args.save_path, "r") as review_file:
-            handled_images = {json.loads(line)["image"] for line in review_file}
+            content = json.load(review_file)
+            handled_images = {line["image"] for line in content}
+            scores = [line["score"] for line in content]
             print(f"Handled images: {handled_images}")
     except FileNotFoundError:
         handled_images = set()
@@ -167,10 +158,11 @@ if __name__ == "__main__":
         # 将当前结果添加到结果列表中
         results.append(cur_js)
 
-    # 将所有结果保存为列表形式的JSON文件
-    with open(save_path, "w") as review_file:
-        json.dump(results, review_file, ensure_ascii=False, indent=4)
+        # 将所有结果保存为列表形式的JSON文件
+        with open(save_path, "w") as review_file:
+            json.dump(results, review_file, ensure_ascii=False, indent=4)
 
-    scores = [_ for _ in scores if _ >= 0]
+    scores.extend([_ for _ in scores if _ >= 0])
     score = sum(scores) / len(scores)
+    print(len(scores))
     print(f"GPT4 Score: {score}")

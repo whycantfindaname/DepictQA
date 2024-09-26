@@ -7,7 +7,6 @@ parser.add_argument("--meta_file", type=str, required=True)
 parser.add_argument("--desp_file", type=str, required=True)
 parser.add_argument("--assess_file", type=str, required=True)
 parser.add_argument("--image_folder", type=str, required=True)
-parser.add_argument("--save_folder", type=str, required=True)
 parser.add_argument("--output_file", type=str, required=True)
 parser.add_argument("--keep_mos", type=str, required=True)
 parser.add_argument("--bbox_provided", required=True)
@@ -25,7 +24,6 @@ if __name__ == "__main__":
     desp_file = args.desp_file
     assess_file = args.assess_file
     image_folder = args.image_folder
-    save_folder = args.save_folder
     output_file = args.output_file
     keep_mos = args.keep_mos
     bbox_provided = args.bbox_provided
@@ -34,7 +32,6 @@ if __name__ == "__main__":
         assess_file,
         meta_file,
         image_folder,
-        save_folder,
         output_file,
         "qwen-vl",
         keep_mos,

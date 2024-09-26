@@ -3,10 +3,11 @@ import logging
 import os
 import random
 import shutil
-
+import re
 import matplotlib.pyplot as plt
 from PIL import Image
 from shapely.geometry import Polygon
+from collections import Counter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -106,26 +107,28 @@ def convert_to_coco_format(json_file, output_file, image_folder):
             "file_name": data["filename"],
         }
         coco_output["images"].append(image_info)
+        try:
+            for category_name, bboxes in data["distortion"].items():
+                category_id = categories_list.index(category_name) + 1
+                for bbox in bboxes:
+                    x_min, y_min = bbox["tl"]["x"], bbox["tl"]["y"]
+                    x_max, y_max = bbox["br"]["x"], bbox["br"]["y"]
+                    width, height = x_max - x_min, y_max - y_min
 
-        for category_name, bboxes in data["distortion"].items():
-            category_id = categories_list.index(category_name) + 1
-            for bbox in bboxes:
-                x_min, y_min = bbox["tl"]["x"], bbox["tl"]["y"]
-                x_max, y_max = bbox["br"]["x"], bbox["br"]["y"]
-                width, height = x_max - x_min, y_max - y_min
-
-                annotation_info = {
-                    "id": annotation_id,
-                    "image_id": image_id,
-                    "category_id": category_id,
-                    "segmentation": [],
-                    "area": width * height,
-                    "bbox": [x_min, y_min, width, height],
-                    "iscrowd": 0,
-                }
-                coco_output["annotations"].append(annotation_info)
-                annotation_id += 1
-        image_id += 1
+                    annotation_info = {
+                        "id": annotation_id,
+                        "image_id": image_id,
+                        "category_id": category_id,
+                        "segmentation": [],
+                        "area": width * height,
+                        "bbox": [x_min, y_min, width, height],
+                        "iscrowd": 0,
+                    }
+                    coco_output["annotations"].append(annotation_info)
+                    annotation_id += 1
+            image_id += 1
+        except AttributeError:
+            pass
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(coco_output, f, ensure_ascii=False, indent=4)
@@ -401,10 +404,9 @@ def construct_chat_template(
     assess_file,
     meta_file,
     image_folder,
-    save_folder,
     output_file,
     model_name="qwen-vl-chat",
-    keep_mos=False,
+    keep_mos=True,
     bbox_provided=True,
 ):
     """
@@ -416,15 +418,13 @@ def construct_chat_template(
         - assess_file: str - The path to the gpt assessment JSON file.
         - meta_file: str - The path to original JSON file. If provided, bounding box data and mos score will be included.
         - image_folder: str - The directory where the original images are stored.
-        - save_folder: str - The directory where the processed images will be saved.
         - output_file: str - The path where the final merged JSON file will be saved.
         - model_name: str  - The model for finetuning. Default is "qwen-vl-chat".
         - bbox_provided: boolean - Indicate if bounding box information should be included
     ):
     """
 
-    os.makedirs(save_folder, exist_ok=True)
-
+    fail_image = []
     desp_data = load_json(desp_file)
     assess_data = load_json(assess_file)
     meta_data = load_json(meta_file)
@@ -436,12 +436,7 @@ def construct_chat_template(
         if desp is None:
             logging.warning(f"{img_name} does not have description, skip")
             continue
-        description_parts = desp["gpt4v_description"].split("\n\n")
-        description_parts = (
-            description_parts
-            if len(description_parts) > 1
-            else desp["gpt4v_description"].split("\n")
-        )
+        description = desp["gpt4v_description"]
 
         assess = next(
             (assess for assess in assess_data if assess["filename"] == img_name), None
@@ -449,49 +444,66 @@ def construct_chat_template(
         if assess is None:
             logging.warning(f"{img_name} does not have assessment, skip.")
             continue
-        assessment_parts = assess["gpt4v_assessment"].split("\n\n")
-        assessment_parts = (
-            assessment_parts
-            if len(assessment_parts) > 1
-            else assess["gpt4v_assessment"].split("\n")
-        )
+        assessment_text = assess["gpt4v_assessment"]
+
+        # 使用正则表达式查找分隔符
+        match = re.search(r'\n*Answer:\s*', assessment_text)
+
+        if match:
+            assessment_question = assessment_text[:match.start()].strip()
+            assessment_answer = assessment_text[match.end():].strip().replace("\n\n", "")
+        else:
+            try:
+                assessment_question, assessment_answer = assessment_text.split('\n\n', 1)
+            except Exception:
+                fail_image.append(img_name)
+                continue
+
+        assessment_answer = re.sub(r'[\n\-]', ' ', assessment_answer)  
+        assessment_answer = re.sub(r'\s+', ' ', assessment_answer).strip()   
 
         score = meta_item.get("mos", "")
+
+        distortion = meta_item["distortion"]
+        if isinstance(distortion, dict):
+            distortion_types = distortion.keys()
+            distortion_list = ", ".join(distortion_types) if distortion_types else "None"
+            bbox = convert_to_qwen_format(distortion)
+        else:
+            bbox = None
+            distortion_list = None
+        level = assign_level(score)
         if keep_mos:
             new_data = {
-                "image": desp["filename"],
+                "image": "QualityLLM_single_2w/" + desp["filename"],
+                "system_prompt": "You are an expert in image quality assessment. Your task is to describe an image and evaluate the quality of the image based on your description.",
                 "conversations": [],
                 "mos": score,
+                "level": level,
             }
         else:
             new_data = {
-                "image": desp["filename"],
+                "image": "QualityLLM_single_2w/" + desp["filename"],
+                "system_prompt": "You are an expert in image quality assessment. Your task is to describe an image and evaluate the quality of the image based on your description.",
                 "conversations": [],
+                "level": level,
             }
-
-        distortion = meta_item.get("distortion", {})
-        distortion_types = distortion.keys()
-        distortion_list = ", ".join(distortion_types) if distortion_types else "None"
-        bbox = convert_to_qwen_format(distortion)
-        level = assign_level(score)
-
         # desp
+        description = re.sub(r'[\n\-]', ' ', description)  
+        description = re.sub(r'\s+', ' ', description).strip()  
         desp_question = {
             "from": "human",
             "value": "<image>Please provide a brief description of the image, including specific objects and any events.",
         }
         desp_answer = {
             "from": "gpt",
-            "value": (
-                description_parts[1]
-                .replace("**Answer:** ", "")
-                .replace("**Answer:**", "")
-                .replace("Answer: ", "")
-                .strip()  # This removes leading or trailing spaces
-                if len(description_parts) > 1
-                else description_parts
-            ),
+            "value": description                
+            .replace("**", "")
+            .replace("#", "")
+            .lstrip()
         }
+ 
+
         new_data["conversations"].append(desp_question)
         new_data["conversations"].append(desp_answer)
 
@@ -500,35 +512,47 @@ def construct_chat_template(
             "from": "human",
             "value": "What types of distortions are present in the image? Answer with names only.",
         }
-        dist_answer = {"from": "gpt", "value": distortion_list}
+        if distortion_list is not None:
+            dist_answer = {"from": "gpt", "value": distortion_list}
+        else:
+            dist_answer = {"from": "gpt", "value": distortion}
+            print(distortion)
         new_data["conversations"].append(dist_question)
         new_data["conversations"].append(dist_answer)
 
         # assess
         assess_question = {
             "from": "human",
-            "value": assessment_parts[0]
-            .replace("**Question:** ", "")
-            .replace("Question: ", ""),
+            "value": assessment_question
+            .replace("**", "")
+            .replace("\n", "")
+            .replace("###", "")
+            .replace("Question:", "")
+            .replace("Question: ", "")
+            .lstrip()
         }
         assess_answer = {
             "from": "gpt",
             "value": (
-                assessment_parts[1]
+                assessment_answer
                 .replace("**Answer:** ", "")
                 .replace("**Answer:**", "")
                 .replace("Answer: ", "")
-                .strip()  # This removes leading or trailing spaces
-                if len(assessment_parts) > 1
-                else ""
+                .replace("**", "")
+                .replace("- ", "")
+                .replace("#", "")
+                .strip()
+                .lstrip() 
             ),
         }
         new_data["conversations"].append(assess_question)
         new_data["conversations"].append(assess_answer)
 
         # bbox
-        if bbox_provided:
-            bbox_info = f"{bbox}" if bbox else ""
+        # print(bbox_provided)
+        # print(bbox is not None)
+        if bbox is not None and bbox_provided:
+            bbox_info = f"{bbox}"
             distortion_info = ", ".join(
                 [
                     f"{type} with bounding box {bbox_loc}"
@@ -543,9 +567,22 @@ def construct_chat_template(
                 "from": "gpt",
                 "value": f"The distortions present in the image and their locations are as follows: {bbox_info if 'qwen-vl' in model_name.lower() else distortion_info}",
             }
-
             new_data["conversations"].append(bbox_question)
             new_data["conversations"].append(bbox_answer)
+        elif bbox_provided:
+            bbox_question = {
+                "from": "human",
+                "value": random.choice(follow_up_questions),
+            }
+            bbox_answer = {
+                "from": "gpt",
+                "value": distortion
+            }
+            new_data["conversations"].append(bbox_question)
+            new_data["conversations"].append(bbox_answer)
+        else:
+            pass
+
 
         # instant rating
         new_data["conversations"].append(
@@ -557,14 +594,6 @@ def construct_chat_template(
 
         json_data.append(new_data)
         # Copy the image file
-        img_path = os.path.join(image_folder, desp["filename"])
-        save_path = os.path.join(save_folder, desp["filename"])
-        if not os.path.exists(save_path):
-            shutil.copy(img_path, save_folder)
-            logging.info(f"Copied {desp['filename']} to {save_folder}")
-        else:
-            logging.info(f"File {desp['filename']} already exists in {save_folder}")
-
         image_data += 1
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -572,19 +601,21 @@ def construct_chat_template(
         json.dump(json_data, file, ensure_ascii=False, indent=4)
 
     (f"Total data: {len(json_data)}")
-    logging.info(f"Total images copied: {image_data}")
+    logging.info(f"Total images: {image_data}")
+    
+    print("Fail image:", fail_image)
+    assess_data = [item for item in assess_data if item["filename"] not in fail_image]
+    with open(assess_file, "w") as f:
+        json.dump(assess_data, f, indent=4)
+    print("Remove the bad assessment data")
 
-    # Check the number of images in the save folder
-    actual_image_count = len(os.listdir(save_folder))
-    logging.info(f"Actual images in folder: {actual_image_count}")
 
-
-def split_train_and_val(json_file, ratio=0.9):
+def split_train_and_val(json_file, ratio=0.95):
     json_data = load_json(json_file)
     # Shuffle the data
     random.seed(42)
     random.shuffle(json_data)
-    # Split data into training and validation sets (90% training, 10% validation)
+    # Split data into training and validation sets (95% training, 5% validation)
     split_index = int(len(json_data) * ratio)
     train_data = json_data[:split_index]
     val_data = json_data[split_index:]
@@ -618,8 +649,13 @@ def convert_to_qwen_format(distortion):
         for box in boxes:
             tl = box["tl"]
             br = box["br"]
-            formatted_boxes += f"<box>({tl['x']},{tl['y']}),({br['x']},{br['y']})</box>"
-        result += formatted_boxes
+            formatted_boxes += f"<box>({round(tl['x'])},{round(tl['y'])}),({round(br['x'])},{round(br['y'])})</box>"
+        result = result + formatted_boxes + ","
+
+    # Remove the last comma
+    if result.endswith(","):
+        result = result[:-1]
+
     return result
 
 
@@ -728,7 +764,7 @@ def filter_bboxes(bboxes, image_width, image_height):
         area = calculate_area(bbox)
         area_ratio = area / (image_width * image_height)
 
-        if area_ratio > 0.8:
+        if area_ratio > 0.7:
             large_bboxes.append(bbox)
         else:
             small_bboxes.append(bbox)
@@ -797,7 +833,7 @@ def clean_bbox_json(json_file, image_folder, save_path):
         json.dump(error, e_out, ensure_ascii=False, indent=4)
 
 
-def plot_bbox_dist(json_file, image_folder, output_path=None):
+def plot_bbox_dist(json_file, image_folder, area_output_path=None, num_output_path=None):
     """
     Calculate bounding box areas as a ratio of image area, and plot the bbox area ratios distribution.
 
@@ -809,13 +845,14 @@ def plot_bbox_dist(json_file, image_folder, output_path=None):
     Returns:
     - List of bounding box area ratios.
     """
-    if output_path:
-        save_folder = os.path.dirname(output_path)
+    if area_output_path:
+        save_folder = os.path.dirname(area_output_path)
         os.makedirs(save_folder, exist_ok=True)
     bbox_areas = []
     image_areas = []
-
+    bbox_num = []
     def process_data(data):
+        num = 0
         image_path = os.path.join(image_folder, data["filename"])
         image_width, image_height = Image.open(image_path).size
         total_image_area = image_width * image_height
@@ -827,6 +864,8 @@ def plot_bbox_dist(json_file, image_folder, output_path=None):
                     bbox_area = (br_x - tl_x) * (br_y - tl_y)
                     bbox_areas.append(bbox_area)
                     image_areas.append(total_image_area)
+                    num += 1
+            bbox_num.append(num)
         except Exception:
             pass
 
@@ -838,14 +877,27 @@ def plot_bbox_dist(json_file, image_folder, output_path=None):
         area / total_area for area, total_area in zip(bbox_areas, image_areas)
     ]
     plt.figure(figsize=(12, 6))
-    plt.hist(
-        bbox_area_ratios, bins=30, color="skyblue", edgecolor="black", range=(0, 1)
-    )
-    plt.xlabel("Bounding Box Area Ratio")
+    # plt.hist(
+    #     bbox_area_ratios, bins=30, color="skyblue", edgecolor="black", range=(0, 1)
+    # )
+    # plt.xlabel("Bounding Box Area Ratio")
+    # plt.ylabel("Frequency")
+    # plt.title("Histogram of Bounding Box Area Ratios")
+    # plt.grid(True)
+    # if area_output_path:
+    #     plt.savefig(area_output_path)
+    # plt.show()
+    counter = Counter(bbox_num)
+    values = list(counter.keys())
+    frequencies = list(counter.values())
+    print(counter.items())
+    plt.bar(values, frequencies, color="skyblue", edgecolor="black")
+    plt.xlabel("Bounding Box Number")
     plt.ylabel("Frequency")
-    plt.title("Histogram of Bounding Box Area Ratios")
+    plt.title("Histogram of Bounding Box Number Per Image")
     plt.grid(True)
-    plt.savefig(output_path)
+    if num_output_path:
+        plt.savefig(num_output_path)
     plt.show()
     return bbox_area_ratios
 
@@ -890,3 +942,38 @@ def plot_mos_distribution(json_file, output_path):
     plt.grid(True)
     plt.savefig(output_path)
     plt.show()
+
+
+def plot_res_distribution(json_file, image_folder, output_path):
+    # Step 1: Read the JSON file
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+    
+    # Step 2: Extract image resolutions
+    widths = []
+    heights = []
+    for item in data:
+        filename = item.get('filename')
+        if filename:
+            image_path = os.path.join(image_folder, filename)
+        else:
+            continue
+
+        if os.path.exists(image_path):
+            width, height = Image.open(image_path).size
+            if width and height:
+                widths.append(width)
+                heights.append(height)
+
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(widths, heights, alpha=0.5, edgecolors='b')
+    plt.title('Resolution Distribution of Images')
+    plt.xlabel('Width (pixels)')
+    plt.ylabel('Height (pixels)')
+    plt.grid(True)
+
+    plt.savefig(output_path)
+    plt.close()
+
+    print(f"Resolution distribution plot saved to: {output_path}")

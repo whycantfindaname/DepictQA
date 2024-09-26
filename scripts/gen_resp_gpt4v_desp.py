@@ -82,9 +82,9 @@ if __name__ == "__main__":
     else:
         desp_data = []
 
-    for idx_meta, meta_item in enumerate(meta_data[idx_meta_start:idx_meta_end]):
-        print("=" * 100)
-        print(idx_meta + idx_meta_start)
+    for idx_meta, meta_item in enumerate(meta_data[idx_meta_start:]):
+        # print("=" * 100)
+        # print(idx_meta + idx_meta_start)
 
         img_name = meta_item["filename"]
         if img_name in [item["filename"] for item in desp_data]:

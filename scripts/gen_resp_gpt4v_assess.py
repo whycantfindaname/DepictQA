@@ -8,7 +8,7 @@ from openai import OpenAI
 from utils import assign_level, load_json
 
 OPENAI_API_KEY = "sk-tE7K8vJ9Dla5zDMx87F9EeB7372340C68067179938991e54"
-OPENAI_API_BASE = "https://api.gpt.ge/v1"
+OPENAI_API_BASE = "https://api.gpt.ge/v1/"
 client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
 parser = argparse.ArgumentParser(
@@ -112,13 +112,14 @@ if __name__ == "__main__":
 
     # description_query
     dist_paths_error = []
-    for idx_meta, meta_item in enumerate(meta_data[idx_meta_start:idx_meta_end]):
-        print("=" * 100)
-        print(idx_meta + idx_meta_start)
+    for idx_meta, meta_item in enumerate(meta_data[idx_meta_start:]):
         img_name = meta_item["filename"]
         if img_name in [item["filename"] for item in assess_data]:
-            print(f"{img_name} has been generated, skip.")
+            # print(f"{img_name} has been generated, skip.")
             continue
+        print("=" * 100)
+        print(idx_meta + idx_meta_start)
+        print(img_name)
         img_path = os.path.join(image_folder, img_name)
         desp_item = next(
             (item for item in desp_data if item["filename"] == img_name), None
@@ -152,7 +153,7 @@ if __name__ == "__main__":
             assess_query = (
                 "You are an expert in image quality assessment. Your task is to evaluate an image based on a detailed description provided to you. "
                 + f"The detailed description is: {description}. "
-                + f"The image contains one or more distortions applied to different regions, with a Mean Opinion Score (MOS) of {score} out of 5, where a higher score indicates a lower degree of degradation."
+                + f"The image contains one or more distortions applied to different regions, with a Mean Opinion Score (MOS) of {score} out of 5,where a higher score indicates a lower degree of degradation."
                 + "Use only the MOS as the basis for your assessment, and do not output any content related to the MOS."
                 + "You will also receive the bounding box information for the distorted regions. "
                 + "The bounding box information is in the form of [{'tl':{x, y}, 'br':{x, y}}], where tl is the top-left corner, and br is the bottom-right corner. "
@@ -163,13 +164,15 @@ if __name__ == "__main__":
                 + "Answer: your answer to the question."
                 + "To answer the question, you should think step by step"
                 + "First step, provide a brief description of the image content summarizing the detailed description in one sentence. "
-                + "The description should be in a declarative form, without using the first person. "
+                + "If the detailed description is unavailable, please provide a one-sentence summary explaining why the image content cannot be described."
+                + "The description should be in a declarative form, without using the first person."
                 + "Second step, describe the location of the distortions in the image and how they affect the quality of specific objects within the bounding box areas. Focus on the local impact of each distortion, describing how it degrades the quality of objects in its vicinity. "
                 + "Instead of directly mentioning the bounding box coordinates, utilize this data to describe the location of distortions using natural language. Include details like relative positions between distortions and near-normal regions."
-                + "Third step, analyze the severity of each distortion and how they affect the overall image quality. Describe which distortions are most severe and how they contribute to the global degradation, considering their interactions, overlaps, or influence on each other. Discuss how these combined effects impact the viewer's perception of the image."
+                + "Third step, analyze the severity of each distortion based on the MOS and how they affect the overall image quality. Describe which distortions are most severe and how they contribute to the global degradation, considering their interactions, overlaps, or influence on each other. Discuss how these combined effects impact the viewer's perception of the image."
                 + f"Final step, end your answer with this sentence: Thus, the quality of the image is {level}."
+                + f"Note that your analysis should be consistent with the provided MOS and the quality level {level} assigned to the image, but do not output any content including the MOS."
                 + "When you describe the distortions, you must strictly use the exact distortion names provided, and do not use any variations, synonyms, or alternative expressions."
-                + "Your response must be concise, not exceeding 150 words."
+                + "Your response must be concise and logically consistent, not exceeding 150 words."
             )
         else:
             assess_query = (
@@ -184,9 +187,9 @@ if __name__ == "__main__":
                 + "To answer the question, you should think step by step"
                 + "First step, provide a brief description of the image content summarizing the detailed description in one sentence. "
                 + "Second step,analyze the overall image quality by highlighting the strengths of the image quality."
-                + "Focus on the impact on visual quality and clarity, considering details such as texture, color accuracy, and sharpness. Emphasize aspects such as sharp details, accurate colors, balanced contrast, and absence of artifacts. "
+                + "Focus on the impact on visual quality and clarity, considering details such as texture, color accuracy, and sharpness. Emphasize the absence of artifacts. "
                 + f"Final step, end your answer with this sentence: Thus, the quality of the image is {level}."
-                + "Your response must be concise, not exceeding 150 words."
+                + "Your response must be concise and logically consistent, not exceeding 150 words."
             )
 
         try:
