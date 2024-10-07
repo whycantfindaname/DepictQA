@@ -239,7 +239,7 @@ def merge_meta_jsons_from_folder(meta_folder, output_file, image_folder):
         print(json_file)
         with open(json_file, "r", encoding="utf-8") as f:
             content = json.load(f)
-        for key, data in content.items():
+        for data in content:
             # Ensure each item is processed only if it contains 'filename' and 'mos'
             if "filename" in data and "mos" in data:
                 # Extract 'filename' and 'mos'
@@ -764,7 +764,7 @@ def filter_bboxes(bboxes, image_width, image_height):
         area = calculate_area(bbox)
         area_ratio = area / (image_width * image_height)
         # TODO： 可能可以砍得再狠一点
-        if area_ratio > 0.7:
+        if area_ratio > 0.6:
             large_bboxes.append(bbox)
         else:
             small_bboxes.append(bbox)
@@ -878,16 +878,16 @@ def plot_bbox_dist(json_file, image_folder, area_output_path=None, num_output_pa
         area / total_area for area, total_area in zip(bbox_areas, image_areas)
     ]
     plt.figure(figsize=(12, 6))
-    # plt.hist(
-    #     bbox_area_ratios, bins=30, color="skyblue", edgecolor="black", range=(0, 1)
-    # )
-    # plt.xlabel("Bounding Box Area Ratio")
-    # plt.ylabel("Frequency")
-    # plt.title("Histogram of Bounding Box Area Ratios")
-    # plt.grid(True)
-    # if area_output_path:
-    #     plt.savefig(area_output_path)
-    # plt.show()
+    plt.hist(
+        bbox_area_ratios, bins=30, color="skyblue", edgecolor="black", range=(0, 1)
+    )
+    plt.xlabel("Bounding Box Area Ratio")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Bounding Box Area Ratios")
+    plt.grid(True)
+    if area_output_path:
+        plt.savefig(area_output_path)
+    plt.show()
     counter = Counter(bbox_num)
     values = list(counter.keys())
     frequencies = list(counter.values())
@@ -936,6 +936,12 @@ def plot_mos_distribution(json_file, output_path):
     data = load_json(json_file)
     mos_scores = [item["mos"] for item in data if "mos" in item]
     bins = [1, 1.8, 2.6, 3.4, 4.2, 5.0]
+    # 打印分段结果
+    print("MOS Score Distribution:")
+    for i in range(len(bins) - 1):
+        count = len([score for score in mos_scores if bins[i] <= score < bins[i+1]])
+        print(f"{bins[i]} - {bins[i+1]}: {count}")
+    # 画图
     plt.hist(mos_scores, bins=bins, edgecolor="black")
     plt.title("MOS Score Distribution")
     plt.xlabel("MOS")
@@ -966,15 +972,53 @@ def plot_res_distribution(json_file, image_folder, output_path):
                 widths.append(width)
                 heights.append(height)
 
-
-    plt.figure(figsize=(10, 6))
+  # Step 3: Plot the resolution distribution with (0, 0) as the bottom-left corner
     plt.scatter(widths, heights, alpha=0.5, edgecolors='b')
+    # Draw the 448x448 square with (0, 0) as the origin
+    plt.plot([448, 448], [0, 448], 'r--', linewidth=2)
+    plt.plot([0, 448], [448, 448], 'r--', linewidth=2)
     plt.title('Resolution Distribution of Images')
     plt.xlabel('Width (pixels)')
     plt.ylabel('Height (pixels)')
     plt.grid(True)
+    plt.plot([0, max(widths)], [0, max(widths)], 'g--', linewidth=2)  # x=y line
 
+    # Set axis limits to start from (0, 0)
+    plt.xlim(left=0)
+    plt.ylim(bottom=0)
+    
+    # Save the plot
     plt.savefig(output_path)
     plt.close()
 
     print(f"Resolution distribution plot saved to: {output_path}")
+    def calculate_resolution_ratios(widths, heights):
+        total_images = len(widths)
+        
+        # Define resolution boundaries
+        resolution_ranges = {
+            "≤ 448x448": lambda w, h: w <= 448 and h <= 448,
+            "448x448 - 720p": lambda w, h: (448 < w <= 1280 and 448 < h <= 720) or (w <= 1280 and h <= 720),
+            "720p - 1080p": lambda w, h: (1280 < w <= 1920 and 720 < h <= 1080) or (w <= 1920 and h <= 1080),
+            "1080p - 2K": lambda w, h: (1920 < w <= 2560 and 1080 < h <= 1440) or (w <= 2560 and h <= 1440),
+            "2K - 4K": lambda w, h: (2560 < w <= 3840 and 1440 < h <= 2160) or (w <= 3840 and h <= 2160),
+            "> 4K": lambda w, h: w > 3840 or h > 2160
+        }
+        
+        # Count the number of images in each resolution range
+        resolution_counts = {key: 0 for key in resolution_ranges}
+        
+        for w, h in zip(widths, heights):
+            for range_name, condition in resolution_ranges.items():
+                if condition(w, h):
+                    resolution_counts[range_name] += 1
+                    break
+
+        # Calculate ratios and print results
+        print("Resolution Distribution Ratios:")
+        for range_name, count in resolution_counts.items():
+            ratio = (count / total_images) * 100
+            print(f"{range_name}: {ratio:.2f}% ({count}/{total_images})")
+
+    # 调用方法计算并打印结果
+    calculate_resolution_ratios(widths, heights)
