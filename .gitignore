@@ -1,6 +1,4 @@
-dataset/
-!dataset/clean_data_v0
-results-5k/
+dataset/clean_data_v0
 results-8k/
 __pycache__
 .vscode
